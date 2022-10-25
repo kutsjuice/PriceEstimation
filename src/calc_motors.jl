@@ -7,14 +7,15 @@ using Optim
 include("simpleneural.jl")
 
 
-df = CSV.read("data.csv", DataFrame; header = true, decimal = ',')
+df = CSV.read("data/data.csv", DataFrame; header = true, decimal = ',')
 
 columns = [2,3,4,5,6,7,1]
 data = Matrix{Float64}(df[!, columns])
 
+
 normal = [norm(col) for col in eachcol(data)]
 
-data = (data' ./ normal)'
+data = (data' ./ normal)'# ' -транспонирование; ./ - "поэлементное" деление
 
 N_neurons = 30;
 N_samples = size(data,1)
@@ -32,7 +33,7 @@ N_weights = N_neurons*(N_inputs + N_outputs)
 
 function fitness(p, xx::Matrix{<: Real}, yy::Vector{<: Real})
     
-    func = x -> NeuralNetwork(p, x, logistic);
+    func = x -> NeuralNetwork(p, x, logistic); # lambda x : NeuralNetwork
 
     prognose = [func(row) for row in eachrow(xx)]
 
@@ -51,10 +52,11 @@ Y_test = YY[testmask,end]
 
 f(p) = fitness(p, X_train, Y_train);
 p0 = rand(N_weights)
-res = optimize(f, p0, method = LBFGS(), autodiff = :forward, f_tol = 1e-5, iterations = 20000)
+res = optimize(f, p0, method = LBFGS(), autodiff = :forward, f_tol = 1e-5, iterations = 20000); # scipy.optimize
 
 p1 = Optim.minimizer(res);
 
+neuralprice = x -> NeuralNetwork(p1, x, logistic);
 
 y_pr_train = [neuralprice(row) for row in eachrow(X_train)]
 plot(Y_train); plot(y_pr_train)
@@ -64,20 +66,3 @@ figure();plot(Y_test) ;plot(y_pr_test)
 
 y_pr = [neuralprice(row) for row in eachrow(XX)]
 figure();plot(YY*normal[7]); plot(y_pr*normal[7])
-neuralprice = x -> NeuralNetwork(p1, x, logistic);
-
-
-
-plot(y_pr)
-
-
-function func1(par1, par2)
-    return par1+par2
-end
-
-
-func2(x,y) = x+y
-
-func2(34,5)
-
-func3 = (x,y) -> x+y
